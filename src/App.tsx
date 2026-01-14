@@ -1,11 +1,20 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button, TextField, Stack, Typography, Box } from "@mui/material";
 import { useForecast } from "./hooks/useForecast";
+import { mapForecastToDaily } from "./utils/forecastMapper";
+import type { DailyForecast } from "./utils/forecastMapper";
+import { DailyForecastList } from "./components/DailyForecast";
 
 function App() {
   const [city, setCity] = useState("");
+  const [selectedDay, setSelectedDay] = useState<DailyForecast | null>(null);
   const { data, loading, error, loadByCity, loadByGeolocation } =
     useForecast();
+
+  const dailyForecasts = useMemo(
+    () => (data ? mapForecastToDaily(data) : []),
+    [data]
+  );
 
   return (
     <Box
@@ -43,10 +52,12 @@ function App() {
         {loading && <Typography>Loading...</Typography>}
         {error && <Typography color="error">{error}</Typography>}
 
-        {data && (
-          <Typography variant="body2">
-            Loaded forecast for {data.city.name}
-          </Typography>
+        {dailyForecasts.length > 0 && !selectedDay && (
+          <DailyForecastList days={dailyForecasts} onSelectDay={setSelectedDay} />
+        )}
+
+        {selectedDay && (
+          <Typography>Drill-down UI will go here for {selectedDay.date}</Typography>
         )}
       </Stack>
     </Box>
